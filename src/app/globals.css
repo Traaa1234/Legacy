@@ -31,10 +31,10 @@
 @layer base {
   html,
   body {
-    background-color: #FAF7F2;
-    color: #2C3E5C;
-    font-family: 'Inter', system-ui, sans-serif;
-    font-size: 18px;
+    background-color: var(--color-cream);
+    color: var(--color-deep-navy);
+    font-family: var(--font-sans);
+    font-size: var(--text-body);
   }
 
   button {
