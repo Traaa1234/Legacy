@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import archiver from 'archiver';
 import { Readable } from 'node:stream';
 import { getServiceSupabase } from '@/lib/supabase/server';
 import { buildManifest } from '@/lib/zip/manifest';
@@ -79,6 +78,7 @@ export async function GET(req: NextRequest) {
     .eq('uploaded_by_user_id', seniorId);
 
   // Build the archive
+  const { default: archiver } = await import('archiver');
   const archive = archiver('zip', { zlib: { level: 9 } });
   archive.on('error', (e) => {
     console.error('archiver error', e);

@@ -5,6 +5,7 @@ const nextConfig: NextConfig = {
     'puppeteer',
     'puppeteer-core',
     '@sparticuz/chromium',
+    'archiver',
   ],
 };
 
