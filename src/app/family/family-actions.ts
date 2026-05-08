@@ -2,7 +2,7 @@
 
 import { z } from 'zod';
 import { getServiceSupabase } from '@/lib/supabase/server';
-import { addReaction, removeReaction } from '@/lib/reactions';
+import { addReaction, removeReaction } from '@/lib/reactions-queries';
 import { revalidatePath } from 'next/cache';
 
 const ToggleReactionInput = z.object({

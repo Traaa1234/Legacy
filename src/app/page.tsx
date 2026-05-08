@@ -1,5 +1,6 @@
 import { getServiceSupabase } from '@/lib/supabase/server';
-import { listFamilyQuestionsForSenior, partitionFamilyQuestions } from '@/lib/family';
+import { partitionFamilyQuestions } from '@/lib/family';
+import { listFamilyQuestionsForSenior } from '@/lib/family-queries';
 import { TodayClient } from './today-client';
 
 export const dynamic = 'force-dynamic';

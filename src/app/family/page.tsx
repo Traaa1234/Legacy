@@ -4,7 +4,7 @@ import {
   listFamilyMembersForSenior,
   listFamilyQuestionsForSenior,
   listReactionsForStories,
-} from '@/lib/family';
+} from '@/lib/family-queries';
 import { listStoriesForUser } from '@/lib/stories';
 import { FamilyViewClient } from './family-view-client';
 import { SeniorViewClient } from './senior-view-client';
