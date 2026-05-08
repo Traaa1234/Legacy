@@ -33,18 +33,6 @@ function uuid(): string {
   return crypto.randomUUID();
 }
 
-// Wait for the recorder blob to be set after stop().
-// useRecorder.stop() returns immediately but onstop fires on a later tick.
-async function waitForBlob(getBlob: () => Blob | null, timeoutMs = 3000): Promise<Blob | null> {
-  const start = Date.now();
-  while (Date.now() - start < timeoutMs) {
-    const b = getBlob();
-    if (b) return b;
-    await new Promise((r) => setTimeout(r, 50));
-  }
-  return null;
-}
-
 export function TodayClient({ prompts, answeredPromptIds, skips }: Props) {
   const [chapter, setChapter] = useState<ChapterSlug>('early_childhood');
   const [phase, setPhase] = useState<Phase>({ kind: 'browsing' });
@@ -71,8 +59,7 @@ export function TodayClient({ prompts, answeredPromptIds, skips }: Props) {
 
   async function handleStop() {
     if (!nextPrompt) return;
-    await recorder.stop();
-    const blob = await waitForBlob(() => recorder.blob);
+    const blob = await recorder.stop();
     if (!blob) {
       setPhase({ kind: 'error', message: 'Could not capture recording. Please try again.' });
       return;

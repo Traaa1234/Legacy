@@ -9,7 +9,7 @@ export interface UseRecorderResult {
   blob: Blob | null;
   durationSeconds: number;
   start: () => Promise<void>;
-  stop: () => Promise<void>;
+  stop: () => Promise<Blob | null>;
   reset: () => void;
 }
 
@@ -19,9 +19,11 @@ export function useRecorder(): UseRecorderResult {
   const [durationSeconds, setDurationSeconds] = useState(0);
 
   const recorderRef = useRef<MediaRecorder | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
   const chunksRef = useRef<BlobPart[]>([]);
   const startedAtRef = useRef<number | null>(null);
   const tickRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const stopResolverRef = useRef<((blob: Blob | null) => void) | null>(null);
 
   const start = useCallback(async () => {
     chunksRef.current = [];
@@ -29,6 +31,7 @@ export function useRecorder(): UseRecorderResult {
     setDurationSeconds(0);
 
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    streamRef.current = stream;
     const rec = new MediaRecorder(stream, { mimeType: 'audio/webm' });
     rec.ondataavailable = (e) => {
       if (e.data && e.data.size > 0) chunksRef.current.push(e.data);
@@ -37,7 +40,12 @@ export function useRecorder(): UseRecorderResult {
       const finalBlob = new Blob(chunksRef.current, { type: 'audio/webm' });
       setBlob(finalBlob);
       setState('reviewing');
-      stream.getTracks().forEach((t) => t.stop());
+      streamRef.current?.getTracks().forEach((t) => t.stop());
+      streamRef.current = null;
+      // Resolve the in-flight stop() promise
+      const resolver = stopResolverRef.current;
+      stopResolverRef.current = null;
+      resolver?.(finalBlob);
     };
 
     rec.start();
@@ -52,13 +60,20 @@ export function useRecorder(): UseRecorderResult {
     }, 250);
   }, []);
 
-  const stop = useCallback(async () => {
-    const rec = recorderRef.current;
-    if (rec && rec.state !== 'inactive') rec.stop();
-    if (tickRef.current) {
-      clearInterval(tickRef.current);
-      tickRef.current = null;
-    }
+  const stop = useCallback(async (): Promise<Blob | null> => {
+    return new Promise((resolve) => {
+      const rec = recorderRef.current;
+      if (!rec || rec.state === 'inactive') {
+        resolve(null);
+        return;
+      }
+      stopResolverRef.current = resolve;
+      rec.stop();
+      if (tickRef.current) {
+        clearInterval(tickRef.current);
+        tickRef.current = null;
+      }
+    });
   }, []);
 
   const reset = useCallback(() => {
