@@ -1,4 +1,5 @@
 import { getServiceSupabase } from '@/lib/supabase/server';
+import { listFamilyQuestionsForSenior, partitionFamilyQuestions } from '@/lib/family';
 import { TodayClient } from './today-client';
 
 export const dynamic = 'force-dynamic';
@@ -22,6 +23,9 @@ export default async function HomePage() {
     .select('prompt_id, skipped_at')
     .eq('user_id', SENIOR_ID);
 
+  const familyQuestions = await listFamilyQuestionsForSenior(SENIOR_ID);
+  const { pending: pendingFamilyQuestions } = partitionFamilyQuestions(familyQuestions);
+
   return (
     <TodayClient
       prompts={prompts ?? []}
@@ -34,6 +38,7 @@ export default async function HomePage() {
         prompt_id: s.prompt_id,
         skipped_at: new Date(s.skipped_at).getTime(),
       }))}
+      pendingFamilyQuestions={pendingFamilyQuestions}
     />
   );
 }

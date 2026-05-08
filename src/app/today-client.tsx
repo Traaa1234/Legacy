@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { CHAPTERS, type ChapterSlug } from '@/lib/chapters';
 import { selectNextPromptId, type PromptRow, type SkipRow } from '@/lib/prompts';
+import type { FamilyQuestionRow } from '@/lib/family';
 import { ChapterSelector } from '@/components/chapter/ChapterSelector';
 import { BigCard, BigText } from '@/components/senior-ui';
 import { useRecorder } from '@/components/recorder/use-recorder';
@@ -22,6 +23,7 @@ interface Props {
   prompts: FullPrompt[];
   answeredPromptIds: string[];
   skips: SkipRow[];
+  pendingFamilyQuestions: FamilyQuestionRow[];
 }
 
 type Phase =
@@ -34,7 +36,12 @@ function uuid(): string {
   return crypto.randomUUID();
 }
 
-export function TodayClient({ prompts, answeredPromptIds, skips }: Props) {
+export function TodayClient({
+  prompts,
+  answeredPromptIds,
+  skips,
+  pendingFamilyQuestions,
+}: Props) {
   const [chapter, setChapter] = useState<ChapterSlug>('early_childhood');
   const [phase, setPhase] = useState<Phase>({ kind: 'browsing' });
   const recorder = useRecorder();
@@ -161,6 +168,22 @@ export function TodayClient({ prompts, answeredPromptIds, skips }: Props) {
 
   return (
     <main className="min-h-screen p-4 max-w-xl mx-auto flex flex-col gap-4">
+      {phase.kind === 'browsing' && pendingFamilyQuestions.length > 0 && (
+        <BigCard className="bg-sand/40 border border-deep-navy/15">
+          <BigText className="uppercase tracking-wide text-sm opacity-60 mb-2">
+            From your family
+          </BigText>
+          <BigText size="question" as="h2">
+            {pendingFamilyQuestions[0]?.question_text}
+          </BigText>
+          {pendingFamilyQuestions.length > 1 && (
+            <p className="text-sm opacity-60 mt-2">
+              + {pendingFamilyQuestions.length - 1} more — see all in Family.
+            </p>
+          )}
+        </BigCard>
+      )}
+
       <ChapterSelector selected={chapter} onSelect={setChapter} />
 
       {phase.kind === 'transcribing' && <TranscribingSpinner />}
