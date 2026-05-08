@@ -5,6 +5,9 @@ import { CHAPTERS, type ChapterSlug } from '@/lib/chapters';
 import { selectNextPromptId, type PromptRow, type SkipRow } from '@/lib/prompts';
 import { ChapterSelector } from '@/components/chapter/ChapterSelector';
 import { BigCard, BigText } from '@/components/senior-ui';
+import { useRecorder } from '@/components/recorder/use-recorder';
+import { RecorderButton } from '@/components/recorder/RecorderButton';
+import { RecorderTimer } from '@/components/recorder/RecorderTimer';
 
 interface FullPrompt extends PromptRow {
   question_text: string;
@@ -18,6 +21,7 @@ interface Props {
 
 export function TodayClient({ prompts, answeredPromptIds, skips }: Props) {
   const [chapter, setChapter] = useState<ChapterSlug>('early_childhood');
+  const recorder = useRecorder();
 
   const inChapter = useMemo(
     () => prompts.filter((p) => p.chapter === chapter),
@@ -43,17 +47,50 @@ export function TodayClient({ prompts, answeredPromptIds, skips }: Props) {
       <ChapterSelector selected={chapter} onSelect={setChapter} />
 
       {nextPrompt ? (
-        <BigCard className="flex-1 flex flex-col gap-6">
-          <p className="text-sm uppercase tracking-wide opacity-60">
-            Question {chapterIndex + 1} of {inChapter.length}
-          </p>
-          <BigText size="question" as="h2">
-            {nextPrompt.question_text}
-          </BigText>
-          <p className="text-base opacity-50 mt-auto">
-            (Recording controls land in the next task)
-          </p>
-        </BigCard>
+        <>
+          <BigCard className="flex-1 flex flex-col gap-6">
+            <p className="text-sm uppercase tracking-wide opacity-60">
+              {recorder.state === 'recording'
+                ? 'Recording…'
+                : `Question ${chapterIndex + 1} of ${inChapter.length}`}
+            </p>
+            <BigText size="question" as="h2">
+              {nextPrompt.question_text}
+            </BigText>
+            {recorder.state === 'recording' && (
+              <RecorderTimer seconds={recorder.durationSeconds} />
+            )}
+          </BigCard>
+
+          {recorder.state !== 'reviewing' && (
+            <RecorderButton
+              state={recorder.state}
+              onStart={recorder.start}
+              onStop={recorder.stop}
+            />
+          )}
+
+          {recorder.state === 'reviewing' && recorder.blob && (
+            <BigCard>
+              <BigText>Recording captured ({recorder.blob.size} bytes).</BigText>
+              <BigText className="opacity-60 mt-2">
+                Transcript review lands in the next task.
+              </BigText>
+              <button
+                onClick={recorder.reset}
+                className="mt-4 text-deep-navy underline"
+              >
+                Discard and try again
+              </button>
+            </BigCard>
+          )}
+
+          {recorder.state === 'idle' && (
+            <button className="text-center py-4 underline opacity-70">
+              Skip for now
+            </button>
+          )}
+        </>
       ) : (
         <BigCard>
           <BigText size="question" as="h2">
