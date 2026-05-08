@@ -9,7 +9,9 @@
     "lint": "eslint",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "seed": "tsx scripts/seed.ts",
+    "db:reset": "npx supabase db reset && npm run seed"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.105.3",
