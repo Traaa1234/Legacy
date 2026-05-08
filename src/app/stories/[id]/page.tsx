@@ -6,6 +6,8 @@ import { getChapterLabel } from '@/lib/chapters';
 import { BigCard, BigText } from '@/components/senior-ui';
 import { PrivacyToggle } from '@/components/story/PrivacyToggle';
 import { StoryAudioPlayer } from './audio-player';
+import { listPhotosLinkedToStory } from '@/lib/photos-queries';
+import { MemoirPhoto } from '@/components/memoir/MemoirPhoto';
 
 export const dynamic = 'force-dynamic';
 
@@ -31,6 +33,8 @@ export default async function StoryDetailPage({
     (story.prompts as unknown as { question_text: string } | null)
       ?.question_text ?? null;
 
+  const linkedPhotos = await listPhotosLinkedToStory(id);
+
   return (
     <main className="min-h-screen p-4 max-w-xl mx-auto flex flex-col gap-6">
       <Link href="/stories" className="opacity-70 underline">
@@ -46,6 +50,13 @@ export default async function StoryDetailPage({
         <BigText className="whitespace-pre-wrap leading-relaxed">
           {story.transcript}
         </BigText>
+        {linkedPhotos.length > 0 && (
+          <div className="border-t border-sand pt-4">
+            {linkedPhotos.map((p) => (
+              <MemoirPhoto key={p.id} photo={p} />
+            ))}
+          </div>
+        )}
         <PrivacyToggle storyId={story.id} initialIsPrivate={story.is_private} />
       </BigCard>
     </main>

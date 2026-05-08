@@ -8,7 +8,7 @@ const ITEMS = [
   { href: '/',         icon: '🏠', label: 'Today',   enabled: true  },
   { href: '/stories',  icon: '📖', label: 'Stories', enabled: true  },
   { href: '/family',   icon: '👪', label: 'Family',  enabled: true  },
-  { href: '/memoir',   icon: '📕', label: 'Memoir',  enabled: false },
+  { href: '/memoir',   icon: '📕', label: 'Memoir',  enabled: true  },
 ];
 
 export function BottomNav() {

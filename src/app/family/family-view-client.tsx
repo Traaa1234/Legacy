@@ -7,6 +7,7 @@ import { BigCard, BigText } from '@/components/senior-ui';
 import { ReactionButton } from '@/components/family/ReactionButton';
 import { AskQuestionForm } from '@/components/family/AskQuestionForm';
 import { SeniorPicker } from '@/components/family/SeniorPicker';
+import { PhotoUploadModal } from '@/components/photos/PhotoUploadModal';
 import { toggleReaction } from './family-actions';
 import {
   groupReactionsByStory,
@@ -35,6 +36,7 @@ export function FamilyViewClient({
   initialReactions,
 }: Props) {
   const [seniorId, setSeniorId] = useState(initialSeniorId);
+  const [photoUploadOpen, setPhotoUploadOpen] = useState(false);
 
   // Switching senior triggers a hard navigation so the server re-queries
   // stories+reactions for that senior.
@@ -66,13 +68,27 @@ export function FamilyViewClient({
     });
   };
 
+  const storyOptions = initialStories.map((s) => ({
+    id: s.id,
+    chapter: s.chapter,
+    question_text: s.question_text,
+  }));
+
   return (
     <main className="min-h-screen p-4 max-w-xl mx-auto flex flex-col gap-6">
       <SeniorPicker seniors={seniors} selectedId={seniorId} onSelect={pickSenior} />
 
-      <BigText size="display" as="h1">
-        {selectedSenior?.display_name}&apos;s stories
-      </BigText>
+      <div className="flex items-center justify-between gap-3">
+        <BigText size="display" as="h1">
+          {selectedSenior?.display_name}&apos;s stories
+        </BigText>
+        <button
+          onClick={() => setPhotoUploadOpen(true)}
+          className="text-deep-navy underline opacity-70 min-h-touch-target"
+        >
+          📷 Add a photo
+        </button>
+      </div>
 
       {selectedSenior && (
         <AskQuestionForm
@@ -128,6 +144,15 @@ export function FamilyViewClient({
           </section>
         );
       })}
+      {photoUploadOpen && selectedSenior && (
+        <PhotoUploadModal
+          uploadedByUserId={familyUserId}
+          forSeniorUserId={selectedSenior.id}
+          stories={storyOptions}
+          onClose={() => setPhotoUploadOpen(false)}
+          onSaved={() => window.location.reload()}
+        />
+      )}
     </main>
   );
 }
