@@ -1,5 +1,17 @@
 const TTL_MS = 60_000;
-const tokens = new Map<string, number>(); // token → expiresAt (epoch ms)
+
+// Store on globalThis with a registry symbol so the cache survives Next.js's
+// per-route module compilation. Without this, the API route and the print
+// route each get their own (empty) Map.
+const STORE_KEY = Symbol.for('legacy.pdf.tokens');
+type GlobalWithTokens = typeof globalThis & {
+  [STORE_KEY]?: Map<string, number>;
+};
+const g = globalThis as GlobalWithTokens;
+if (!g[STORE_KEY]) {
+  g[STORE_KEY] = new Map<string, number>();
+}
+const tokens: Map<string, number> = g[STORE_KEY];
 
 function cleanup() {
   const now = Date.now();
