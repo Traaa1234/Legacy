@@ -1,0 +1,14 @@
+@import "tailwindcss";
+
+@page {
+  size: Letter;
+  margin: 0.75in;
+}
+
+.page-break-before { break-before: page; page-break-before: always; }
+.page-break-after { break-after: page; page-break-after: always; }
+.page-break-inside-avoid { break-inside: avoid; page-break-inside: avoid; }
+
+body {
+  font-family: 'Inter', system-ui, sans-serif;
+}
