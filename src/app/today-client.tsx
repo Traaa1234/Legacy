@@ -80,7 +80,14 @@ export function TodayClient({ prompts, answeredPromptIds, skips }: Props) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ bucket: 'audio', storyId, ext: 'webm' }),
       });
-      if (!upRes.ok) throw new Error('Could not get upload URL');
+      if (!upRes.ok) {
+        let detail = `HTTP ${upRes.status}`;
+        try {
+          const body = await upRes.json();
+          if (body?.error) detail = typeof body.error === 'string' ? body.error : JSON.stringify(body.error);
+        } catch { /* not JSON */ }
+        throw new Error(`Could not get upload URL: ${detail}`);
+      }
       const { path, signedUrl } = await upRes.json();
 
       // 3. PUT blob directly to Supabase Storage
@@ -89,7 +96,10 @@ export function TodayClient({ prompts, answeredPromptIds, skips }: Props) {
         headers: { 'Content-Type': 'audio/webm' },
         body: blob,
       });
-      if (!putRes.ok) throw new Error('Audio upload failed');
+      if (!putRes.ok) {
+        const text = await putRes.text().catch(() => '');
+        throw new Error(`Audio upload failed: HTTP ${putRes.status}${text ? ` — ${text.slice(0, 200)}` : ''}`);
+      }
 
       // 4. Hit /api/transcribe
       const trRes = await fetch('/api/transcribe', {
@@ -97,7 +107,15 @@ export function TodayClient({ prompts, answeredPromptIds, skips }: Props) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ audioPath: path }),
       });
-      if (!trRes.ok) throw new Error('Transcription failed');
+      if (!trRes.ok) {
+        let detail = `HTTP ${trRes.status}`;
+        try {
+          const body = await trRes.json();
+          if (body?.stage) detail = `${body.stage} failed (${trRes.status})`;
+          else if (body?.error) detail = typeof body.error === 'string' ? body.error : JSON.stringify(body.error);
+        } catch { /* response body wasn't JSON */ }
+        throw new Error(`Transcription failed: ${detail}`);
+      }
       const tr = await trRes.json();
 
       setPhase({
