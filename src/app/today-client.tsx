@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import Link from 'next/link';
 import { CHAPTERS, type ChapterSlug } from '@/lib/chapters';
 import { selectNextPromptId, type PromptRow, type SkipRow } from '@/lib/prompts';
 import { ChapterSelector } from '@/components/chapter/ChapterSelector';
@@ -208,12 +209,20 @@ export function TodayClient({ prompts, answeredPromptIds, skips }: Props) {
           />
 
           {recorder.state === 'idle' && (
-            <button
-              onClick={handleSkip}
-              className="text-center py-4 underline opacity-70"
-            >
-              Skip for now
-            </button>
+            <div className="flex justify-center gap-8 py-4">
+              <button
+                onClick={handleSkip}
+                className="underline opacity-70 min-h-touch-target"
+              >
+                Skip for now
+              </button>
+              <Link
+                href="/stories"
+                className="underline opacity-70 min-h-touch-target flex items-center"
+              >
+                Exit
+              </Link>
+            </div>
           )}
         </>
       )}
