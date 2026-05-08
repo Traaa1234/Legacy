@@ -4,10 +4,7 @@ A personal history recorder for seniors. Record short audio answers to chapter-o
 
 ## Status
 
-**Phase 0 — Design.** Spec is complete and approved. Implementation has not started.
-
-- Design spec: [`docs/superpowers/specs/2026-05-07-legacy-mvp-design.md`](docs/superpowers/specs/2026-05-07-legacy-mvp-design.md)
-- Visual mockups: `.superpowers/brainstorm/` *(local only, not in git)*
+**Phase 1 — Foundation & core recording loop.** ✅ Demo target hit: senior records a story end-to-end and finds it in Stories.
 
 ## Tech stack
 
@@ -28,7 +25,58 @@ See the design spec for full details on each phase.
 
 ## Local development
 
-*(Will be filled in once Phase 1 implementation begins.)*
+### Prerequisites
+- Node 20+ (use `.nvmrc`)
+- A Supabase project (cloud or local) — see Setup below
+- ffmpeg (only required if you re-add the e2e tests later)
+- An OpenAI account with billing credits (Whisper API)
+- An Anthropic account with billing credits (Claude API)
+
+### Setup
+
+1. `npm install`
+2. Create a Supabase project at https://supabase.com (free tier works fine).
+3. Generate a personal access token at https://supabase.com/dashboard/account/tokens.
+4. Copy `.env.example` to `.env.local` and fill in:
+   - `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` (from Project Settings → API)
+   - `SUPABASE_ACCESS_TOKEN` (the personal access token from step 3)
+   - `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`
+   - `PDF_GENERATOR_TOKEN=local-dev-token` (any string — only used in Phase 3)
+5. Link the local CLI to your cloud project:
+   ```bash
+   npx supabase link --project-ref <your-project-ref>
+   ```
+6. Apply migrations:
+   ```bash
+   npx supabase db push
+   ```
+7. Seed the database (1 senior, 1 family, 1 family link, 50 prompts):
+   ```bash
+   npm run seed
+   ```
+8. Run the dev server:
+   ```bash
+   npm run dev
+   ```
+   App at http://localhost:3000.
+
+### Tests
+```bash
+npm test            # vitest unit + lib tests (29 tests)
+```
+
+### Commands
+- `npm run dev` — Next dev server
+- `npm run build` — production build
+- `npm run seed` — reseed DB (idempotent)
+- `npm test` — vitest
+
+### Notable caveats
+
+- **Phase 1 uses persona cookies, not real auth.** The hardcoded senior ID is `00000000-0000-4000-8000-000000000001` and family ID is `00000000-0000-4000-8000-000000000002`. Visiting `/family` flips the cookie to family persona; visiting `/` flips it back. Real Supabase Auth lands in a post-MVP follow-up.
+- **`/family` and `/memoir` routes are stubbed** — they're scoped for Phase 2 and Phase 3 respectively. The bottom-nav tabs are visible but disabled.
+- **API costs:** each Whisper call is ~$0.006/min; each Claude cleanup is ~$0.005. ~$5 of OpenAI credit covers ~14 hours of recording.
+- **Next 16 deprecation:** the `src/middleware.ts` file uses Next's middleware convention which is deprecated in favor of `src/proxy.ts`. Currently still works; rename in a follow-up.
 
 ## License
 
