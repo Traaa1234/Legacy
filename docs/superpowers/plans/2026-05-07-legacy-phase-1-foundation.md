@@ -3301,6 +3301,9 @@ git commit -m "feat(nav): bottom nav scaffold (Today, Stories live; Family, Memo
 
 ## Task 32: Playwright E2E — record-and-save round trip
 
+> **MVP DECISION (2026-05-08):** This task was DEFERRED to Phase 2.
+> Reason: Phase 1's demo target was verified manually (recording → transcript → save → visible in Stories). Each automated run hits real OpenAI/Anthropic APIs and costs credits per execution. The e2e will be re-added in Phase 2 with API mocking so it can run cheaply on every PR.
+
 **Files:**
 - Create: `playwright.config.ts`
 - Create: `tests/e2e/record-and-save.spec.ts`
