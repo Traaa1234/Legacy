@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import './globals.css';
+import { BottomNav } from '@/components/nav/BottomNav';
 
 export const metadata: Metadata = {
   title: 'Legacy',
@@ -8,9 +9,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
   children,
-}: {
-  children: React.ReactNode;
-}) {
+}: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <head>
@@ -21,7 +20,10 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body>{children}</body>
+      <body className="pb-24">
+        {children}
+        <BottomNav />
+      </body>
     </html>
   );
 }
