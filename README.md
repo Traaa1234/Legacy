@@ -4,10 +4,12 @@ A personal history recorder for seniors. Record short audio answers to chapter-o
 
 ## Status
 
-**Phase 2 — Family loop.** ✅ Family members can listen to stories, react with hearts, and ask new questions. Multi-senior support. Streaming ZIP backup. Persona switching via `?persona=family|senior`.
+**Phase 3 — Memoir + Photos + PDF.** ✅ The senior can browse a paginated in-app memoir, add photos (or have family add them), and download the whole thing as a PDF via Puppeteer + Chromium.
 
 **Phase 1** (foundation + recording loop): complete.
-**Phases 3-4** (Memoir + AI polish): scoped in spec, Phase 3 plan written, not yet built.
+**Phase 2** (family loop): complete.
+**Phase 3** (this): complete.
+**Phase 4** (AI polish — opt-in follow-up questions, admin prompt-bank generation): scoped in spec, not yet built.
 
 ## Tech stack
 
@@ -63,19 +65,19 @@ See the design spec for full details on each phase.
    ```
    App at http://localhost:3000.
 
-### Demo flow (3 minutes)
+### Demo flow (5 minutes)
 
 1. Visit `/` (you're the senior). Record a story under "Early Childhood".
-2. Visit `/?persona=family` (now you're a family member). See the story, click ❤️, send a question via the composer.
-3. Visit `/?persona=senior`. The question now appears in a "From your family" card above the chapter prompt.
-4. Visit `/family?persona=family`, click "Download all stories as a ZIP" — get a backup with manifest, transcripts, and audio.
-
-To switch between Mom and Dad as the senior whose stories you're viewing (in family persona), use the senior chip selector at the top of `/family?persona=family`.
+2. Tap Memoir → see cover + TOC + your story.
+3. Tap "📷 Add a photo" — pick an image, link it to your story, save. The photo appears inline in the memoir.
+4. Tap "⬇ Download as PDF" — wait ~10s for Puppeteer to render. PDF downloads with cover, TOC, your story, and the photo.
+5. Visit `/?persona=family` (now you're Sarah). On `/family`, click "📷 Add a photo" — upload a photo for Mom (you can link to her story or just chapter-tag it).
+6. Visit `/?persona=senior` then `/memoir` — Sarah's photo now shows in the memoir.
 
 ### Tests
 
 ```bash
-npm test            # vitest unit + lib tests (~40 tests)
+npm test            # vitest unit + lib tests (~47 tests)
 npm run test:e2e    # Playwright record-and-save + family-flow (mocked AI, ~30s)
 ```
 
@@ -93,6 +95,9 @@ npm run test:e2e    # Playwright record-and-save + family-flow (mocked AI, ~30s)
 - **Next 16 deprecation:** the `src/middleware.ts` file uses Next's middleware convention which is deprecated in favor of `src/proxy.ts`. Currently still works; rename in a follow-up.
 - **E2E tests use mocked Whisper + Claude** (set `LEGACY_AI_MOCK=1` server-side). They use real Supabase (your cloud DB), so each run leaves a story behind. Re-seed when the DB gets cluttered: `npm run seed`.
 - **Browser persona is sticky.** The `legacy_persona` cookie persists across pages. Use `?persona=senior` or `?persona=family` to switch.
+- **PDF generation runs server-side via Puppeteer + `@sparticuz/chromium`.** First run on a cold Vercel function is ~5-10s; subsequent runs are ~2-3s. The Chromium binary is included in the deployment.
+- **Photos are JPEG/PNG only**, max 8 MB. Stored in the private `photos` Supabase Storage bucket. Signed URLs are minted server-side for both the in-app memoir and the print route.
+- **`/memoir/print` is internal** — guarded by a single-use 60-second `x-pdf-generator-token` header. Direct browser visits 404.
 
 ## License
 
