@@ -16,6 +16,13 @@ export async function transcribeAudio(
   audio: Blob | Buffer,
   filename = 'audio.webm',
 ): Promise<WhisperResult> {
+  if (process.env.LEGACY_AI_MOCK === '1') {
+    return {
+      text: 'This is a test recording. My childhood bedroom had pale yellow walls.',
+      durationSeconds: 3,
+    };
+  }
+
   const blob =
     audio instanceof Blob ? audio : new Blob([audio as unknown as ArrayBuffer]);
   // OpenAI SDK expects a File-like object in Node 20+

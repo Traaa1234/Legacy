@@ -16,6 +16,9 @@ const CLEANUP_SYSTEM = `You are helping a senior preserve their life story. You'
 Return ONLY the cleaned transcript. No commentary, no headers, no explanations.`;
 
 export async function cleanTranscript(rawText: string): Promise<string> {
+  if (process.env.LEGACY_AI_MOCK === '1') {
+    return rawText.trim();
+  }
   if (!rawText.trim()) return '';
   const res = await getClient().messages.create({
     model: 'claude-sonnet-4-5',
