@@ -7,6 +7,7 @@ export interface StoryRow {
   transcript: string;
   audio_url: string;
   audio_duration_seconds: number;
+  is_private: boolean;
   created_at: string;
   prompt_id: string | null;
   question_text: string | null;
@@ -17,7 +18,7 @@ export async function listStoriesForUser(userId: string): Promise<StoryRow[]> {
   const { data, error } = await sb
     .from('stories')
     .select(
-      `id, chapter, transcript, audio_url, audio_duration_seconds, created_at, prompt_id,
+      `id, chapter, transcript, audio_url, audio_duration_seconds, is_private, created_at, prompt_id,
        prompts:prompt_id (question_text)`,
     )
     .eq('user_id', userId)
@@ -30,6 +31,7 @@ export async function listStoriesForUser(userId: string): Promise<StoryRow[]> {
     transcript: r.transcript,
     audio_url: r.audio_url,
     audio_duration_seconds: r.audio_duration_seconds,
+    is_private: r.is_private,
     created_at: r.created_at,
     prompt_id: r.prompt_id,
     question_text:
