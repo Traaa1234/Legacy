@@ -4,7 +4,10 @@ A personal history recorder for seniors. Record short audio answers to chapter-o
 
 ## Status
 
-**Phase 1 — Foundation & core recording loop.** ✅ Demo target hit: senior records a story end-to-end and finds it in Stories.
+**Phase 2 — Family loop.** ✅ Family members can listen to stories, react with hearts, and ask new questions. Multi-senior support. Streaming ZIP backup. Persona switching via `?persona=family|senior`.
+
+**Phase 1** (foundation + recording loop): complete.
+**Phases 3-4** (Memoir + AI polish): scoped in spec, Phase 3 plan written, not yet built.
 
 ## Tech stack
 
@@ -60,9 +63,20 @@ See the design spec for full details on each phase.
    ```
    App at http://localhost:3000.
 
+### Demo flow (3 minutes)
+
+1. Visit `/` (you're the senior). Record a story under "Early Childhood".
+2. Visit `/?persona=family` (now you're a family member). See the story, click ❤️, send a question via the composer.
+3. Visit `/?persona=senior`. The question now appears in a "From your family" card above the chapter prompt.
+4. Visit `/family?persona=family`, click "Download all stories as a ZIP" — get a backup with manifest, transcripts, and audio.
+
+To switch between Mom and Dad as the senior whose stories you're viewing (in family persona), use the senior chip selector at the top of `/family?persona=family`.
+
 ### Tests
+
 ```bash
-npm test            # vitest unit + lib tests (29 tests)
+npm test            # vitest unit + lib tests (~40 tests)
+npm run test:e2e    # Playwright record-and-save + family-flow (mocked AI, ~30s)
 ```
 
 ### Commands
@@ -77,6 +91,8 @@ npm test            # vitest unit + lib tests (29 tests)
 - **`/family` and `/memoir` routes are stubbed** — they're scoped for Phase 2 and Phase 3 respectively. The bottom-nav tabs are visible but disabled.
 - **API costs:** each Whisper call is ~$0.006/min; each Claude cleanup is ~$0.005. ~$5 of OpenAI credit covers ~14 hours of recording.
 - **Next 16 deprecation:** the `src/middleware.ts` file uses Next's middleware convention which is deprecated in favor of `src/proxy.ts`. Currently still works; rename in a follow-up.
+- **E2E tests use mocked Whisper + Claude** (set `LEGACY_AI_MOCK=1` server-side). They use real Supabase (your cloud DB), so each run leaves a story behind. Re-seed when the DB gets cluttered: `npm run seed`.
+- **Browser persona is sticky.** The `legacy_persona` cookie persists across pages. Use `?persona=senior` or `?persona=family` to switch.
 
 ## License
 
