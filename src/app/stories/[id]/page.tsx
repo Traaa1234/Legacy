@@ -4,6 +4,7 @@ import { getServiceSupabase } from '@/lib/supabase/server';
 import { getAudioSignedUrl } from '@/lib/supabase/signed-url';
 import { getChapterLabel } from '@/lib/chapters';
 import { BigCard, BigText } from '@/components/senior-ui';
+import { PrivacyToggle } from '@/components/story/PrivacyToggle';
 import { StoryAudioPlayer } from './audio-player';
 
 export const dynamic = 'force-dynamic';
@@ -18,7 +19,7 @@ export default async function StoryDetailPage({
 
   const { data: story } = await sb
     .from('stories')
-    .select(`id, chapter, transcript, audio_url, created_at, prompt_id,
+    .select(`id, chapter, transcript, audio_url, is_private, created_at, prompt_id,
              prompts:prompt_id (question_text)`)
     .eq('id', id)
     .single();
@@ -45,6 +46,7 @@ export default async function StoryDetailPage({
         <BigText className="whitespace-pre-wrap leading-relaxed">
           {story.transcript}
         </BigText>
+        <PrivacyToggle storyId={story.id} initialIsPrivate={story.is_private} />
       </BigCard>
     </main>
   );
