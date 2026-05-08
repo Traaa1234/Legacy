@@ -4,13 +4,16 @@ import { PERSONA_COOKIE } from '@/lib/persona';
 export function middleware(req: NextRequest) {
   const res = NextResponse.next();
 
-  // Visiting /family flips the cookie to family.
-  // Visiting / (or anything else) flips it to senior.
-  const path = req.nextUrl.pathname;
-  if (path.startsWith('/family')) {
-    res.cookies.set(PERSONA_COOKIE, 'family', { path: '/', sameSite: 'lax' });
-  } else if (path === '/' || path.startsWith('/stories') || path.startsWith('/memoir')) {
+  // Initialize persona cookie to 'senior' on the first visit.
+  if (!req.cookies.get(PERSONA_COOKIE)) {
     res.cookies.set(PERSONA_COOKIE, 'senior', { path: '/', sameSite: 'lax' });
+  }
+
+  // Allow ?persona= query param to switch personas (used by fake invite link
+  // and the dev-only "switch view" toggle).
+  const personaParam = req.nextUrl.searchParams.get('persona');
+  if (personaParam === 'family' || personaParam === 'senior') {
+    res.cookies.set(PERSONA_COOKIE, personaParam, { path: '/', sameSite: 'lax' });
   }
 
   return res;
