@@ -1,40 +1,41 @@
+import { createHmac, timingSafeEqual } from 'node:crypto';
+import { env } from '@/lib/env';
+
 const TTL_MS = 60_000;
 
-// Store on globalThis with a registry symbol so the cache survives Next.js's
-// per-route module compilation. Without this, the API route and the print
-// route each get their own (empty) Map.
-const STORE_KEY = Symbol.for('legacy.pdf.tokens');
-type GlobalWithTokens = typeof globalThis & {
-  [STORE_KEY]?: Map<string, number>;
-};
-const g = globalThis as GlobalWithTokens;
-if (!g[STORE_KEY]) {
-  g[STORE_KEY] = new Map<string, number>();
-}
-const tokens: Map<string, number> = g[STORE_KEY];
-
-function cleanup() {
-  const now = Date.now();
-  for (const [t, exp] of tokens) {
-    if (exp < now) tokens.delete(t);
-  }
+function sign(payload: string): string {
+  return createHmac('sha256', env.pdfGeneratorToken())
+    .update(payload)
+    .digest('hex');
 }
 
 export function mintToken(): string {
-  cleanup();
-  const token = crypto.randomUUID();
-  tokens.set(token, Date.now() + TTL_MS);
-  return token;
+  const expiresAt = Date.now() + TTL_MS;
+  const payload = `${expiresAt}`;
+  const signature = sign(payload);
+  return `${payload}.${signature}`;
 }
 
 export function consumeToken(token: string): boolean {
-  cleanup();
-  const expires = tokens.get(token);
-  if (!expires) return false;
-  if (expires < Date.now()) {
-    tokens.delete(token);
+  const dot = token.indexOf('.');
+  if (dot < 0) return false;
+
+  const payload = token.slice(0, dot);
+  const signature = token.slice(dot + 1);
+
+  const expiresAt = Number.parseInt(payload, 10);
+  if (!Number.isFinite(expiresAt)) return false;
+  if (expiresAt < Date.now()) return false;
+
+  // Constant-time comparison to prevent timing attacks
+  const expectedSig = sign(payload);
+  if (signature.length !== expectedSig.length) return false;
+  try {
+    return timingSafeEqual(
+      Buffer.from(signature, 'hex'),
+      Buffer.from(expectedSig, 'hex'),
+    );
+  } catch {
     return false;
   }
-  tokens.delete(token); // single-use
-  return true;
 }
