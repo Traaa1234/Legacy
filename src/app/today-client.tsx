@@ -6,14 +6,14 @@ import { CHAPTERS, type ChapterSlug } from '@/lib/chapters';
 import { selectNextPromptId, type PromptRow, type SkipRow } from '@/lib/prompts';
 import type { FamilyQuestionRow } from '@/lib/family';
 import { ChapterSelector } from '@/components/chapter/ChapterSelector';
-import { BigCard, BigText } from '@/components/senior-ui';
+import { BigCard, BigText, BigButton } from '@/components/senior-ui';
 import { useRecorder } from '@/components/recorder/use-recorder';
 import { RecorderButton } from '@/components/recorder/RecorderButton';
 import { RecorderTimer } from '@/components/recorder/RecorderTimer';
 import { TranscribingSpinner } from '@/components/recorder/TranscribingSpinner';
 import { TranscriptReview } from '@/components/recorder/TranscriptReview';
 import { putPendingAudio, clearPendingAudio } from '@/lib/indexed-db';
-import { saveStory, skipPrompt } from './today-actions';
+import { saveStory, skipPrompt, saveFamilyQuestionAnswer } from './today-actions';
 
 interface FullPrompt extends PromptRow {
   question_text: string;
@@ -28,8 +28,9 @@ interface Props {
 
 type Phase =
   | { kind: 'browsing' }
+  | { kind: 'answering-family'; familyQuestion: FamilyQuestionRow }
   | { kind: 'transcribing' }
-  | { kind: 'reviewing'; transcript: string; transcriptRaw: string; storyId: string; audioPath: string; durationSeconds: number }
+  | { kind: 'reviewing'; transcript: string; transcriptRaw: string; storyId: string; audioPath: string; durationSeconds: number; familyQuestionId?: string }
   | { kind: 'error'; message: string };
 
 function uuid(): string {
@@ -72,10 +73,29 @@ export function TodayClient({
       setPhase({ kind: 'error', message: 'Could not capture recording. Please try again.' });
       return;
     }
-    await uploadAndTranscribe(blob, nextPrompt);
+    await uploadAndTranscribe(blob, { type: 'prompt', prompt: nextPrompt });
   }
 
-  async function uploadAndTranscribe(blob: Blob, prompt: FullPrompt) {
+  async function handleStopFamilyAnswer() {
+    if (phase.kind !== 'answering-family') return;
+    const familyQuestion = phase.familyQuestion;
+    const blob = await recorder.stop();
+    if (!blob) {
+      setPhase({ kind: 'error', message: 'Could not capture recording. Please try again.' });
+      return;
+    }
+    await uploadAndTranscribe(blob, {
+      type: 'family',
+      familyQuestionId: familyQuestion.id,
+      chapter,
+    });
+  }
+
+  type Target =
+    | { type: 'prompt'; prompt: FullPrompt }
+    | { type: 'family'; familyQuestionId: string; chapter: ChapterSlug };
+
+  async function uploadAndTranscribe(blob: Blob, target: Target) {
     setPhase({ kind: 'transcribing' });
     const storyId = uuid();
     try {
@@ -133,6 +153,7 @@ export function TodayClient({
         transcript: tr.transcript,
         transcriptRaw: tr.transcript_raw,
         durationSeconds: tr.duration_seconds,
+        familyQuestionId: target.type === 'family' ? target.familyQuestionId : undefined,
       });
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Something went wrong';
@@ -141,16 +162,30 @@ export function TodayClient({
   }
 
   async function handleSave(finalTranscript: string) {
-    if (phase.kind !== 'reviewing' || !nextPrompt) return;
-    await saveStory({
-      storyId: phase.storyId,
-      promptId: nextPrompt.id,
-      chapter,
-      audioPath: phase.audioPath,
-      transcriptRaw: phase.transcriptRaw,
-      transcript: finalTranscript,
-      durationSeconds: phase.durationSeconds,
-    });
+    if (phase.kind !== 'reviewing') return;
+    if (phase.familyQuestionId) {
+      // Family question answer
+      await saveFamilyQuestionAnswer({
+        storyId: phase.storyId,
+        familyQuestionId: phase.familyQuestionId,
+        chapter,
+        audioPath: phase.audioPath,
+        transcriptRaw: phase.transcriptRaw,
+        transcript: finalTranscript,
+        durationSeconds: phase.durationSeconds,
+      });
+    } else {
+      if (!nextPrompt) return;
+      await saveStory({
+        storyId: phase.storyId,
+        promptId: nextPrompt.id,
+        chapter,
+        audioPath: phase.audioPath,
+        transcriptRaw: phase.transcriptRaw,
+        transcript: finalTranscript,
+        durationSeconds: phase.durationSeconds,
+      });
+    }
     await clearPendingAudio(phase.storyId);
     recorder.reset();
     setPhase({ kind: 'browsing' });
@@ -176,8 +211,19 @@ export function TodayClient({
           <BigText size="question" as="h2">
             {pendingFamilyQuestions[0]?.question_text}
           </BigText>
+          <div className="mt-4">
+            <BigButton
+              variant="primary"
+              onClick={() => {
+                const q = pendingFamilyQuestions[0];
+                if (q) setPhase({ kind: 'answering-family', familyQuestion: q });
+              }}
+            >
+              🎙 Record an answer
+            </BigButton>
+          </div>
           {pendingFamilyQuestions.length > 1 && (
-            <p className="text-sm opacity-60 mt-2">
+            <p className="text-sm opacity-60 mt-3">
               + {pendingFamilyQuestions.length - 1} more — see all in Family.
             </p>
           )}
@@ -207,6 +253,39 @@ export function TodayClient({
           onSave={handleSave}
           onRerecord={handleRerecord}
         />
+      )}
+
+      {phase.kind === 'answering-family' && (
+        <>
+          <BigCard className="flex-1 flex flex-col gap-6 bg-sand/40 border border-deep-navy/15">
+            <p className="text-sm uppercase tracking-wide opacity-60">
+              {recorder.state === 'recording'
+                ? 'Recording…'
+                : 'From your family'}
+            </p>
+            <BigText size="question" as="h2">
+              {phase.familyQuestion.question_text}
+            </BigText>
+            {recorder.state === 'recording' && (
+              <RecorderTimer seconds={recorder.durationSeconds} />
+            )}
+          </BigCard>
+
+          <RecorderButton
+            state={recorder.state}
+            onStart={recorder.start}
+            onStop={handleStopFamilyAnswer}
+          />
+
+          {recorder.state === 'idle' && (
+            <button
+              onClick={() => setPhase({ kind: 'browsing' })}
+              className="text-center py-4 underline opacity-70 min-h-touch-target"
+            >
+              Back to my chapter
+            </button>
+          )}
+        </>
       )}
 
       {phase.kind === 'browsing' && nextPrompt && (

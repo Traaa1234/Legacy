@@ -45,3 +45,44 @@ export async function skipPrompt(input: z.infer<typeof SkipPromptInput>) {
   );
   revalidatePath('/');
 }
+
+const SaveFamilyAnswerInput = z.object({
+  storyId: z.string().uuid(),
+  familyQuestionId: z.string().uuid(),
+  chapter: z.string(),
+  audioPath: z.string(),
+  transcriptRaw: z.string(),
+  transcript: z.string(),
+  durationSeconds: z.number().int().nonnegative(),
+});
+
+export async function saveFamilyQuestionAnswer(
+  input: z.infer<typeof SaveFamilyAnswerInput>,
+) {
+  const data = SaveFamilyAnswerInput.parse(input);
+  const sb = getServiceSupabase();
+
+  // 1. Insert the story
+  const { error: storyErr } = await sb.from('stories').insert({
+    id: data.storyId,
+    user_id: SENIOR_ID,
+    family_question_id: data.familyQuestionId,
+    audio_url: data.audioPath,
+    audio_duration_seconds: data.durationSeconds,
+    transcript_raw: data.transcriptRaw,
+    transcript: data.transcript,
+    chapter: data.chapter,
+  });
+  if (storyErr) throw new Error(storyErr.message);
+
+  // 2. Mark the family question as answered
+  const { error: updateErr } = await sb
+    .from('family_questions')
+    .update({ answered_story_id: data.storyId })
+    .eq('id', data.familyQuestionId);
+  if (updateErr) throw new Error(updateErr.message);
+
+  revalidatePath('/');
+  revalidatePath('/stories');
+  revalidatePath('/family');
+}
