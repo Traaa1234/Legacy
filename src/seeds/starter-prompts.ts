@@ -72,11 +72,61 @@ export const STARTER_PROMPTS: StarterPrompt[] = [
   { chapter: 'practical_skills', order_in_chapter: 4, question_text: 'What is a skill from your trade that you wish you could teach?' },
   { chapter: 'practical_skills', order_in_chapter: 5, question_text: 'How did you handle a major decision you faced alone?' },
   { chapter: 'practical_skills', order_in_chapter: 6, question_text: 'What is something simple but important that people forget to do?' },
+
+  // === ADDITIONAL PROMPTS (added 2026-05-13 for bank expansion) ===
+
+  // Early Childhood — adds 4 (was 8)
+  { chapter: 'early_childhood', order_in_chapter: 9,  question_text: 'What was your favorite hiding spot as a child, and what did you do there?' },
+  { chapter: 'early_childhood', order_in_chapter: 10, question_text: 'Was there a holiday or birthday that stands out from when you were little?' },
+  { chapter: 'early_childhood', order_in_chapter: 11, question_text: 'What did Sunday afternoons feel like at your house?' },
+  { chapter: 'early_childhood', order_in_chapter: 12, question_text: 'Who in your extended family did you look up to, and why?' },
+
+  // School Years — adds 4 (was 7)
+  { chapter: 'school_years', order_in_chapter: 8,  question_text: 'What was the most embarrassing thing that ever happened to you at school?' },
+  { chapter: 'school_years', order_in_chapter: 9,  question_text: 'Tell me about a teacher who saw something in you that you didn\'t see in yourself.' },
+  { chapter: 'school_years', order_in_chapter: 10, question_text: 'What book or movie from your school years stayed with you?' },
+  { chapter: 'school_years', order_in_chapter: 11, question_text: 'Was there a time you got in trouble that you can laugh about now?' },
+
+  // Young Adulthood — adds 4 (was 6)
+  { chapter: 'young_adulthood', order_in_chapter: 7,  question_text: 'Tell me about the first really big purchase you ever made.' },
+  { chapter: 'young_adulthood', order_in_chapter: 8,  question_text: 'Who broke your heart, or whose heart did you break? What did you learn?' },
+  { chapter: 'young_adulthood', order_in_chapter: 9,  question_text: 'What music shaped you in those years?' },
+  { chapter: 'young_adulthood', order_in_chapter: 10, question_text: 'Was there a turning point when you started to see your parents as people?' },
+
+  // Building a Family — adds 4 (was 6)
+  { chapter: 'building_a_family', order_in_chapter: 7,  question_text: 'What was the hardest decision you and your partner made together?' },
+  { chapter: 'building_a_family', order_in_chapter: 8,  question_text: 'Tell me about a time your family pulled together during something difficult.' },
+  { chapter: 'building_a_family', order_in_chapter: 9,  question_text: 'What did your home smell like on an ordinary weekday?' },
+  { chapter: 'building_a_family', order_in_chapter: 10, question_text: 'Was there a piece of advice your parents gave you that you passed on?' },
+
+  // Career & Work — adds 4 (was 6)
+  { chapter: 'career_and_work', order_in_chapter: 7,  question_text: 'Tell me about a customer, client, or colleague you still think about.' },
+  { chapter: 'career_and_work', order_in_chapter: 8,  question_text: 'What did you learn about yourself in your first leadership role?' },
+  { chapter: 'career_and_work', order_in_chapter: 9,  question_text: 'Was there a job you took for the wrong reasons that turned out right?' },
+  { chapter: 'career_and_work', order_in_chapter: 10, question_text: 'Tell me about a time you had to start over professionally.' },
+
+  // Reflections & Wisdom — adds 4 (was 5)
+  { chapter: 'reflections_wisdom', order_in_chapter: 6,  question_text: 'What habit took you the longest to break, and how did you finally do it?' },
+  { chapter: 'reflections_wisdom', order_in_chapter: 7,  question_text: 'When have you felt the most yourself?' },
+  { chapter: 'reflections_wisdom', order_in_chapter: 8,  question_text: 'What is one thing you forgive yourself for, looking back?' },
+  { chapter: 'reflections_wisdom', order_in_chapter: 9,  question_text: 'How has your idea of success changed over your lifetime?' },
+
+  // Memorable Stories on Your Mind — adds 4 (was 6)
+  { chapter: 'memorable_stories', order_in_chapter: 7,  question_text: 'Tell me about a small kindness that meant the world to you.' },
+  { chapter: 'memorable_stories', order_in_chapter: 8,  question_text: 'What is a coincidence that still feels meaningful?' },
+  { chapter: 'memorable_stories', order_in_chapter: 9,  question_text: 'Tell me about a place that felt like it belonged to you.' },
+  { chapter: 'memorable_stories', order_in_chapter: 10, question_text: 'Was there a conversation that changed how you saw someone?' },
+
+  // Information, Knowledge & Practical Skills — adds 4 (was 6)
+  { chapter: 'practical_skills', order_in_chapter: 7,  question_text: 'What is something you know how to do that almost no one else in your family does?' },
+  { chapter: 'practical_skills', order_in_chapter: 8,  question_text: 'Tell me your best tip for dealing with a difficult person.' },
+  { chapter: 'practical_skills', order_in_chapter: 9,  question_text: 'What rule of thumb has saved you the most over the years?' },
+  { chapter: 'practical_skills', order_in_chapter: 10, question_text: 'What is one thing you wish schools had taught you?' },
 ];
 
-// Sanity check at module load — total must be 50
-if (STARTER_PROMPTS.length !== 50) {
+// Sanity check at module load — total must be at least 50
+if (STARTER_PROMPTS.length < 50) {
   throw new Error(
-    `STARTER_PROMPTS must have 50 entries; found ${STARTER_PROMPTS.length}`,
+    `STARTER_PROMPTS should have at least 50 entries; found ${STARTER_PROMPTS.length}`,
   );
 }
