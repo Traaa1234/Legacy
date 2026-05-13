@@ -14,6 +14,7 @@ import { TranscribingSpinner } from '@/components/recorder/TranscribingSpinner';
 import { TranscriptReview } from '@/components/recorder/TranscriptReview';
 import { putPendingAudio, clearPendingAudio } from '@/lib/indexed-db';
 import { saveStory, skipPrompt, saveFamilyQuestionAnswer } from './today-actions';
+import { LanguageSelector } from '@/components/recorder/LanguageSelector';
 
 interface FullPrompt extends PromptRow {
   question_text: string;
@@ -24,6 +25,7 @@ interface Props {
   answeredPromptIds: string[];
   skips: SkipRow[];
   pendingFamilyQuestions: FamilyQuestionRow[];
+  initialLanguage: string;
 }
 
 type Phase =
@@ -42,8 +44,16 @@ export function TodayClient({
   answeredPromptIds,
   skips,
   pendingFamilyQuestions,
+  initialLanguage,
 }: Props) {
   const [chapter, setChapter] = useState<ChapterSlug>('early_childhood');
+  const [language, setLanguage] = useState(initialLanguage);
+
+  function changeLanguage(code: string) {
+    setLanguage(code);
+    // Persist via cookie so it survives reloads
+    document.cookie = `legacy_lang=${code}; path=/; max-age=${60 * 60 * 24 * 365}; SameSite=Lax`;
+  }
   const [phase, setPhase] = useState<Phase>({ kind: 'browsing' });
   const recorder = useRecorder();
 
@@ -133,7 +143,7 @@ export function TodayClient({
       const trRes = await fetch('/api/transcribe', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ audioPath: path }),
+        body: JSON.stringify({ audioPath: path, language }),
       });
       if (!trRes.ok) {
         let detail = `HTTP ${trRes.status}`;
@@ -173,6 +183,7 @@ export function TodayClient({
         transcriptRaw: phase.transcriptRaw,
         transcript: finalTranscript,
         durationSeconds: phase.durationSeconds,
+        language,
       });
     } else {
       if (!nextPrompt) return;
@@ -184,6 +195,7 @@ export function TodayClient({
         transcriptRaw: phase.transcriptRaw,
         transcript: finalTranscript,
         durationSeconds: phase.durationSeconds,
+        language,
       });
     }
     await clearPendingAudio(phase.storyId);
@@ -230,6 +242,7 @@ export function TodayClient({
         </BigCard>
       )}
 
+      <LanguageSelector selected={language} onSelect={changeLanguage} />
       <ChapterSelector selected={chapter} onSelect={setChapter} />
 
       {phase.kind === 'transcribing' && <TranscribingSpinner />}

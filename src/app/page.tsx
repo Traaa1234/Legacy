@@ -2,12 +2,17 @@ import { getServiceSupabase } from '@/lib/supabase/server';
 import { partitionFamilyQuestions } from '@/lib/family';
 import { listFamilyQuestionsForSenior } from '@/lib/family-queries';
 import { TodayClient } from './today-client';
+import { cookies } from 'next/headers';
+import { LANGUAGE_COOKIE, resolveLanguage } from '@/lib/languages';
 
 export const dynamic = 'force-dynamic';
 
 const SENIOR_ID = '00000000-0000-4000-8000-000000000001';
 
 export default async function HomePage() {
+  const cookieStore = await cookies();
+  const initialLanguage = resolveLanguage(cookieStore.get(LANGUAGE_COOKIE)?.value);
+
   const sb = getServiceSupabase();
 
   const { data: prompts } = await sb
@@ -40,6 +45,7 @@ export default async function HomePage() {
         skipped_at: new Date(s.skipped_at).getTime(),
       }))}
       pendingFamilyQuestions={pendingFamilyQuestions}
+      initialLanguage={initialLanguage}
     />
   );
 }

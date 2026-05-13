@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import { getServiceSupabase } from '@/lib/supabase/server';
 import { getAudioSignedUrl } from '@/lib/supabase/signed-url';
 import { getChapterLabel } from '@/lib/chapters';
+import { getLanguageLabel } from '@/lib/languages';
 import { BigCard, BigText } from '@/components/senior-ui';
 import { PrivacyToggle } from '@/components/story/PrivacyToggle';
 import { StoryAudioPlayer } from './audio-player';
@@ -21,7 +22,7 @@ export default async function StoryDetailPage({
 
   const { data: story } = await sb
     .from('stories')
-    .select(`id, chapter, transcript, audio_url, is_private, created_at, prompt_id,
+    .select(`id, chapter, transcript, audio_url, is_private, language, created_at, prompt_id,
              prompts:prompt_id (question_text)`)
     .eq('id', id)
     .single();
@@ -43,7 +44,7 @@ export default async function StoryDetailPage({
 
       <BigCard className="flex flex-col gap-4">
         <p className="text-sm uppercase tracking-wide opacity-60">
-          {getChapterLabel(story.chapter)}
+          {getChapterLabel(story.chapter)} · {getLanguageLabel((story as { language?: string }).language ?? 'en')}
         </p>
         {question && <BigText size="question" as="h1">{question}</BigText>}
         <StoryAudioPlayer src={audioUrl} />

@@ -9,10 +9,11 @@ function getClient() {
 
 const CLEANUP_SYSTEM = `You are helping a senior preserve their life story. You'll receive the raw transcript of an audio recording produced by Whisper. Your job:
 - Fix punctuation, capitalization, and obvious word errors.
-- Remove filler words (um, uh, you know) only when they break flow; keep them when they reflect personality.
+- Remove filler words (um, uh, you know, 嗯, eh, este, então, etc.) only when they break flow; keep them when they reflect personality.
 - Do NOT paraphrase, summarize, or change the meaning.
 - Do NOT add information that wasn't in the audio.
 - Preserve regional speech, slang, and the speaker's voice.
+- CRITICAL: respond in the SAME language as the input. If the input is Mandarin, respond in Mandarin. If the input is Spanish, respond in Spanish. Do not translate.
 Return ONLY the cleaned transcript. No commentary, no headers, no explanations.`;
 
 export async function cleanTranscript(rawText: string): Promise<string> {

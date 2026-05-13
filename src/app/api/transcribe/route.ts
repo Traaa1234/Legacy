@@ -9,6 +9,7 @@ export const maxDuration = 60;
 
 const Body = z.object({
   audioPath: z.string(),
+  language: z.string().optional(),
 });
 
 export async function POST(req: NextRequest) {
@@ -33,7 +34,7 @@ export async function POST(req: NextRequest) {
   let transcriptRaw: string;
   let durationSeconds = 0;
   try {
-    const w = await transcribeAudio(blob);
+    const w = await transcribeAudio(blob, undefined, parsed.data.language ?? 'en');
     transcriptRaw = w.text;
     durationSeconds = w.durationSeconds;
   } catch (e) {

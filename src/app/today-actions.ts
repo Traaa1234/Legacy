@@ -14,6 +14,7 @@ const SaveStoryInput = z.object({
   transcriptRaw: z.string(),
   transcript: z.string(),
   durationSeconds: z.number().int().nonnegative(),
+  language: z.string().default('en'),
 });
 
 export async function saveStory(input: z.infer<typeof SaveStoryInput>) {
@@ -28,6 +29,7 @@ export async function saveStory(input: z.infer<typeof SaveStoryInput>) {
     transcript_raw: data.transcriptRaw,
     transcript: data.transcript,
     chapter: data.chapter,
+    language: data.language,
   });
   if (error) throw new Error(error.message);
   revalidatePath('/');
@@ -54,6 +56,7 @@ const SaveFamilyAnswerInput = z.object({
   transcriptRaw: z.string(),
   transcript: z.string(),
   durationSeconds: z.number().int().nonnegative(),
+  language: z.string().default('en'),
 });
 
 export async function saveFamilyQuestionAnswer(
@@ -72,6 +75,7 @@ export async function saveFamilyQuestionAnswer(
     transcript_raw: data.transcriptRaw,
     transcript: data.transcript,
     chapter: data.chapter,
+    language: data.language,
   });
   if (storyErr) throw new Error(storyErr.message);
 

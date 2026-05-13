@@ -15,10 +15,11 @@ export interface WhisperResult {
 export async function transcribeAudio(
   audio: Blob | Buffer,
   filename = 'audio.webm',
+  language = 'en',
 ): Promise<WhisperResult> {
   if (process.env.LEGACY_AI_MOCK === '1') {
     return {
-      text: 'This is a test recording. My childhood bedroom had pale yellow walls.',
+      text: `[mock-${language}] This is a test recording. My childhood bedroom had pale yellow walls.`,
       durationSeconds: 3,
     };
   }
@@ -32,6 +33,7 @@ export async function transcribeAudio(
     model: 'whisper-1',
     file,
     response_format: 'verbose_json',
+    language, // Whisper accepts ISO-639-1 codes; significantly improves non-English accuracy
   });
 
   return {
